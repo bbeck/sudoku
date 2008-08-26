@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="sudoku" default="all">
+  <!-- ==================================================================== -->
+  <!-- MODULES                                                              -->
+  <!--   To add a new module, include its build file below with an import   -->
+  <!--   statement, and then modify each of the toplevel targets below      -->
+  <!--   (init, clean, all) to chain to the appropriate targets for your    -->
+  <!--   new module.                                                        -->
+  <!-- ==================================================================== -->
+  <import file="driver/driver.xml"/>
+
+  <!-- ==================================================================== -->
+  <!-- PROPERTIES                                                           -->
+  <!-- ==================================================================== -->
+  <property name="out.dir" value="out"/>
+
+  <!-- ==================================================================== -->
+  <!-- TARGETS                                                              -->
+  <!-- ==================================================================== -->
+  <target name="init" depends="driver.init">
+  </target>
+
+  <target name="clean" depends="driver.clean">
+    <delete dir="${out.dir}"/>
+  </target>
+
+  <target name="all" depends="init, clean, driver.compile">
+  </target>
+</project>

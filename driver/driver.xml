@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="module_driver" default="driver.compile">
+  <dirname property="driver.basedir" file="${ant.file.module_driver}"/>
+
+  <!-- ==================================================================== -->
+  <!-- PROPERTIES                                                           -->
+  <!-- ==================================================================== -->
+  <property name="driver.src.dir" value="${driver.basedir}/src"/>
+  <property name="driver.data.dir" value="${driver.basedir}/data"/>
+  <property name="driver.output.dir" value="${driver.basedir}/../out/driver"/>
+
+  <!-- ==================================================================== -->
+  <!-- CLASSPATHS                                                           -->
+  <!-- ==================================================================== -->
+  <path id="driver.compile.classpath">
+  </path>
+
+  <path id="driver.runtime.classpath">
+    <pathelement location="${driver.output.dir}"/>
+  </path>
+
+  <!-- ==================================================================== -->
+  <!-- TARGETS                                                              -->
+  <!-- ==================================================================== -->
+  <target name="driver.init">
+  </target>
+
+  <target name="driver.compile">
+    <mkdir dir="${driver.output.dir}"/>
+    <javac destdir="${driver.output.dir}">
+      <classpath refid="driver.compile.classpath"/>
+      <src location="${driver.src.dir}"/>
+    </javac>
+
+    <copy todir="${driver.output.dir}">
+      <fileset dir="${driver.data.dir}"/>
+    </copy>
+  </target>
+
+  <target name="driver.clean" description="cleanup module">
+    <delete dir="${driver.output.dir}"/>
+  </target>
+</project>
