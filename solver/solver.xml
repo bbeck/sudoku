@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="module_solver" default="solver.compile">
+  <dirname property="solver.basedir" file="${ant.file.module_solver}"/>
+
+  <!-- ==================================================================== -->
+  <!-- PROPERTIES                                                           -->
+  <!-- ==================================================================== -->
+  <property name="solver.src.dir" value="${solver.basedir}/src"/>
+  <property name="solver.output.dir" value="${solver.basedir}/../out/solver"/>
+
+  <!-- ==================================================================== -->
+  <!-- CLASSPATHS                                                           -->
+  <!-- ==================================================================== -->
+  <path id="solver.compile.classpath">
+    <path refid="driver.runtime.classpath"/>
+  </path>
+
+  <path id="solver.runtime.classpath">
+    <path refid="driver.runtime.classpath"/>
+    <pathelement location="${solver.output.dir}"/>
+  </path>
+
+  <!-- ==================================================================== -->
+  <!-- TARGETS                                                              -->
+  <!-- ==================================================================== -->
+  <target name="solver.init">
+  </target>
+
+  <target name="solver.compile">
+    <mkdir dir="${solver.output.dir}"/>
+
+    <javac destdir="${solver.output.dir}">
+      <classpath refid="solver.compile.classpath"/>
+      <src location="${solver.src.dir}"/>
+    </javac>
+  </target>
+
+  <target name="solver.clean">
+    <delete dir="${solver.output.dir}"/>
+  </target>
+</project>

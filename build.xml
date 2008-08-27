@@ -8,6 +8,7 @@
   <!--   new module.                                                        -->
   <!-- ==================================================================== -->
   <import file="driver/driver.xml"/>
+  <import file="solver/solver.xml"/>
 
   <!-- ==================================================================== -->
   <!-- PROPERTIES                                                           -->
@@ -15,15 +16,56 @@
   <property name="out.dir" value="out"/>
 
   <!-- ==================================================================== -->
-  <!-- TARGETS                                                              -->
+  <!-- BUILD TARGETS                                                        -->
   <!-- ==================================================================== -->
-  <target name="init" depends="driver.init">
+  <target name="init" depends="driver.init, solver.init">
   </target>
 
-  <target name="clean" depends="driver.clean">
+  <target name="clean" depends="driver.clean, solver.clean">
     <delete dir="${out.dir}"/>
   </target>
 
-  <target name="all" depends="init, clean, driver.compile">
+  <target name="all" depends="init, clean, driver.compile, solver.compile">
+  </target>
+
+  <!-- ==================================================================== -->
+  <!-- RUN TARGETS                                                          -->
+  <!-- ==================================================================== -->
+  <target name="debug">
+    <property name="debug.specified" value="true"/>
+    <property name="debug.jvmargs" value="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"/>
+  </target>
+  <target name="debug.default" unless="debug.specified">
+    <property name="debug.jvmargs" value=""/>
+  </target>
+
+  <target name="profile">
+    <property name="profile.specified" value="true"/>
+    <property name="profile.jvmargs" value="-agentlib:hprof=cpu=samples,format=a,depth=2,lineno=y"/>
+  </target>
+  <target name="profile.default" unless="profile.specified">
+    <property name="profile.jvmargs" value=""/>
+  </target>
+
+  <target name="tuned">
+    <property name="tuned.spedified" value="true"/>
+    <property name="tuned.jvmargs" value="-server -Xverify:none -da -dsa"/>
+  </target>
+  <target name="tuned.default" unless="tuned.specified">
+    <property name="tuned.jvmargs" value=""/>
+  </target>
+
+  <target name="solver.run" depends="driver.compile, solver.compile, debug.default, profile.default, tuned.default">
+    <fail message="Please specify a solver to run using -Dsolver.name=[your solver name]" unless="solver.name"/>
+
+    <java classname="sudoku.Driver" fork="yes">
+      <classpath refid="solver.runtime.classpath"/>
+      <jvmarg line="-Xmx512m"/>
+      <jvmarg line="${debug.jvmargs}"/>
+      <jvmarg line="${profile.jvmargs}"/>
+      <jvmarg line="${tuned.jvmargs}"/>
+      <arg line="${solver.name}"/>
+      <arg line="${solver.args}"/>
+    </java>
   </target>
 </project>

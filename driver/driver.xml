@@ -27,7 +27,8 @@
 
   <target name="driver.compile">
     <mkdir dir="${driver.output.dir}"/>
-    <javac destdir="${driver.output.dir}">
+    
+    <javac destdir="${driver.output.dir}" debug="on">
       <classpath refid="driver.compile.classpath"/>
       <src location="${driver.src.dir}"/>
     </javac>
@@ -37,7 +38,7 @@
     </copy>
   </target>
 
-  <target name="driver.clean" description="cleanup module">
+  <target name="driver.clean">
     <delete dir="${driver.output.dir}"/>
   </target>
 </project>

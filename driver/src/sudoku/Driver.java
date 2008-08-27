@@ -54,7 +54,7 @@ public class Driver
         Class<? extends Solver> cls = Class.forName(solverClassName).asSubclass(Solver.class);
         solver = cls.newInstance();
       } catch(Exception e) {
-        System.err.printf("Unable to instantiate algorithm: %1\n", solverClassName);
+        System.err.printf("Unable to instantiate algorithm: %1$s\n", solverClassName);
         System.exit(3);
         solver = null;  // for the compiler
       }

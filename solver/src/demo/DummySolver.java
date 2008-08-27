@@ -1,4 +1,6 @@
-package sudoku;
+package demo;
+
+import sudoku.Solver;
 
 public class DummySolver implements Solver
 {
