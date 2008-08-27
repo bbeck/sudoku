@@ -1,0 +1,242 @@
+package brandon.inference;
+
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+public final class Board
+{
+  public static final int N = 9;
+  public static final int NUM_CELLS = N * N;
+  public static final int NUM_GROUPS = N * 3;
+  private static final int MISSING = sudoku.Solver.MISSING;
+
+  /**
+   * Mapping of the groups a given cell is in.
+   */
+  private static final int[][] GROUPS = new int[NUM_CELLS][3];
+  static {
+    for(int id = 0; id < NUM_CELLS; id++) {
+      GROUPS[id][0] = id % 9;
+      GROUPS[id][1] = 9 + id / 9;
+      GROUPS[id][2] = 18 + 3 * (id / 27) + (id / 3) % 3;
+    }
+  }
+
+  /**
+   * Mapping of the neighbors of a given cell.
+   */
+  private static final int[][] NEIGHBORS = new int[NUM_CELLS][20];
+  static {
+    for(int id = 0; id < NUM_CELLS; id++) {
+      Set<Integer> neighbors = new HashSet<Integer>();
+      for(int i = 0; i < GROUPS[id].length; i++) {
+        int group = GROUPS[id][i];
+
+        for(int j = 0; j < NUM_CELLS; j++) {
+          for(int k = 0; k < GROUPS[j].length; k++) {
+            if(GROUPS[j][k] == group) {
+              neighbors.add(j);
+            }
+          }
+        }
+      }
+      neighbors.remove(id);
+
+      Iterator<Integer> iter = neighbors.iterator();
+      for(int i = 0; i < 20; i++) {
+        NEIGHBORS[id][i] = iter.next();
+      }
+    }
+  }
+
+  /**
+   * Mapping of which cells are in a given group.
+   */
+  private static final int[][] GROUP_CELLS = new int[NUM_GROUPS][N];
+  static {
+    int[] indices = new int[NUM_GROUPS];
+    for(int id = 0; id < NUM_CELLS; id++) {
+      for(int groupid : GROUPS[id]) {
+        GROUP_CELLS[groupid][indices[groupid]++] = id;
+      }
+    }
+  }
+
+
+  private final Bitvector[] possibilities;
+
+  private Board(boolean fill)
+  {
+    possibilities = new Bitvector[NUM_CELLS];
+
+    if(fill) {
+      Arrays.fill(possibilities, Bitvector.ALL);
+    }
+  }
+
+  public final boolean setValue(int id, int value)
+  {
+    assert 0 <= id && id < NUM_CELLS : id;
+    assert 1 <= value && value <= N : value;
+
+    // Check to see if setting the specified value would cause a contradiction
+    Bitvector valueMask = Bitvector.encode(value);
+    if(possibilities[id].intersect(valueMask) == Bitvector.NONE) {
+      return false;
+    }
+
+    // Set the value of the specified cell
+    possibilities[id] = valueMask;
+
+    // Go to each neighboring cell and update their possibility lists,
+    // detecting any contradictions
+    for(int neighborId : getNeighbors(id)) {
+      Bitvector oldPossibilityMask = possibilities[neighborId];
+      Bitvector possibilityMask = oldPossibilityMask.subtract(valueMask);
+
+      // Nothing was changed
+      if(oldPossibilityMask == possibilityMask) {
+        continue;
+      }
+
+      // Contradiction
+      if(possibilityMask == Bitvector.NONE) {
+        return false;
+      }
+
+      possibilities[neighborId] = possibilityMask;
+
+      if(possibilityMask.getBitCount() == 1) {
+        if(!setValue(neighborId, possibilityMask.getBits()[0])) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  public final int getCellToSearch()
+  {
+    int bestCount = Integer.MAX_VALUE;
+    int bestId = -1;
+
+    for(int id = 0; id < NUM_CELLS; id++) {
+      int count = possibilities[id].getBitCount();
+      if(1 < count && count < bestCount) {
+        bestCount = count;
+        bestId = id;
+      }
+    }
+
+    return bestId;
+  }
+
+  public final int[] getPossibleValues(int id)
+  {
+    return possibilities[id].getBits();
+  }
+
+  public final String toString()
+  {
+    String rowFormat = " {0} {1} {2} | {3} {4} {5} | {6} {7} {8} ";
+    String spacer = "-------------------------------+-------------------------------+-------------------------------";
+
+    String[] formats = new String[N];
+    for(int i = 0; i < N; i++) {
+      String[] possibilityString = new String[N];
+
+      for(int j = 0; j < N; j++) {
+        int[] possibleValues = possibilities[i*N+j].getBits();
+
+        possibilityString[j] = "";
+
+        for(int k = 0; k < N; k++) {
+          if(Arrays.binarySearch(possibleValues, k) >= 0) {
+            possibilityString[j] += Integer.toString(k);
+          } else {
+            possibilityString[j] += ".";
+          }
+        }
+      }
+
+      formats[i] = MessageFormat.format(rowFormat, (Object[]) possibilityString);
+    }
+
+    return
+        formats[0] + "\n" +
+        formats[1] + "\n" +
+        formats[2] + "\n" +
+        spacer + "\n" +
+        formats[3] + "\n" +
+        formats[4] + "\n" +
+        formats[5] + "\n" +
+        spacer + "\n" +
+        formats[6] + "\n" +
+        formats[7] + "\n" +
+        formats[8] + "\n";
+  }
+
+  /**
+   * Construct a board from an array.
+   */
+  public static Board fromArray(int[][] array)
+  {
+    Board board = new Board(true);
+    assert array.length == N;
+
+    for(int i = 0; i < N; i++) {
+      assert array[i].length == N;
+
+      for(int j = 0; j < N; j++) {
+        int value = array[i][j];
+        if(value != MISSING) {
+          board.setValue(i * N + j, value);
+        }
+      }
+    }
+
+    return board;
+  }
+
+  /**
+   * Construct a board from another board.
+   */
+  public static Board fromBoard(Board other)
+  {
+    Board board = new Board(false);
+    System.arraycopy(other.possibilities, 0, board.possibilities, 0, NUM_CELLS);
+
+    return board;
+  }
+
+  /**
+   * Copy the data in the specified board into the provided array.
+   */
+  public static void toArray(Board board, int[][] array)
+  {
+    assert array.length == N;
+
+    for(int id = 0; id < NUM_CELLS; id++) {
+      assert array[id].length == N;
+
+      int value = board.possibilities[id].getBits()[0];
+      array[id/N][id%N] = value;
+    }
+  }
+
+  public static int[] getNeighbors(int id)
+  {
+    assert 0 <= id && id < NUM_CELLS;
+    return NEIGHBORS[id];
+  }
+
+  public static int[] getGroupMembers(int groupid)
+  {
+    assert 0 <= groupid && groupid < NUM_GROUPS;
+    return GROUP_CELLS[groupid];
+  }
+}
