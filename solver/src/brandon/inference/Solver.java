@@ -37,7 +37,7 @@ public final class Solver implements sudoku.Solver
 
   private final Board solve(Board board)
   {
-    return search(board);
+    return infer(board);
   }
 
   private final Board search(Board board)

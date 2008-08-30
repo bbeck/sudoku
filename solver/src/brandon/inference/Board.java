@@ -11,8 +11,7 @@ public final class Board
   public static final int N = 9;
   public static final int NUM_CELLS = N * N;
   public static final int NUM_GROUPS = N * 3;
-  private static final int MISSING = sudoku.Solver.MISSING;
-
+  
   /**
    * Mapping of the groups a given cell is in.
    */
@@ -26,7 +25,7 @@ public final class Board
   }
 
   /**
-   * Mapping of the neighbors of a given cell.
+   * Mapping of all of the neighbors of a given cell.
    */
   private static final int[][] NEIGHBORS = new int[NUM_CELLS][20];
   static {
@@ -65,15 +64,24 @@ public final class Board
     }
   }
 
+  /**
+   * Factory for creating bitvectors.
+   */
+  private final BitvectorFactory factory;
 
+  /**
+   * Possibilities for every cell in the board.
+   */
   private final Bitvector[] possibilities;
 
   private Board(boolean fill)
   {
+    factory = BitvectorFactory.getInstance(N);
     possibilities = new Bitvector[NUM_CELLS];
 
     if(fill) {
-      Arrays.fill(possibilities, Bitvector.ALL);
+      Arrays.fill(possibilities, factory.getAll());
+      
     }
   }
 
@@ -83,8 +91,8 @@ public final class Board
     assert 1 <= value && value <= N : value;
 
     // Check to see if setting the specified value would cause a contradiction
-    Bitvector valueMask = Bitvector.encode(value);
-    if(possibilities[id].intersect(valueMask) == Bitvector.NONE) {
+    Bitvector valueMask = factory.encode(value);
+    if(possibilities[id].intersect(valueMask) == factory.getNone()) {
       return false;
     }
 
@@ -93,7 +101,9 @@ public final class Board
 
     // Go to each neighboring cell and update their possibility lists,
     // detecting any contradictions
-    for(int neighborId : getNeighbors(id)) {
+    int[] neighbors = getNeighbors(id);
+    for(int i = 0; i < neighbors.length; i++) {
+      int neighborId = neighbors[i];
       Bitvector oldPossibilityMask = possibilities[neighborId];
       Bitvector possibilityMask = oldPossibilityMask.subtract(valueMask);
 
@@ -103,7 +113,7 @@ public final class Board
       }
 
       // Contradiction
-      if(possibilityMask == Bitvector.NONE) {
+      if(possibilityMask == factory.getNone()) {
         return false;
       }
 
@@ -113,6 +123,24 @@ public final class Board
         if(!setValue(neighborId, possibilityMask.getBits()[0])) {
           return false;
         }
+      }
+    }
+
+    return true;
+  }
+
+  public final boolean removePossibilities(int id, int[] values)
+  {
+    Bitvector possibilityMask = possibilities[id].subtract(factory.encode(values));
+    possibilities[id] = possibilityMask;
+
+    if(possibilityMask == factory.getNone()) {
+      return false;
+    }
+
+    if(possibilityMask.getBitCount() == 1) {
+      if(!setValue(id, possibilityMask.getBits()[0])) {
+        return false;
       }
     }
 
@@ -193,7 +221,7 @@ public final class Board
 
       for(int j = 0; j < N; j++) {
         int value = array[i][j];
-        if(value != MISSING) {
+        if(value != sudoku.Solver.MISSING) {
           board.setValue(i * N + j, value);
         }
       }
@@ -228,12 +256,18 @@ public final class Board
     }
   }
 
+  /**
+   * Determine all of the neighbors of a given cell.
+   */
   public static int[] getNeighbors(int id)
   {
     assert 0 <= id && id < NUM_CELLS;
     return NEIGHBORS[id];
   }
 
+  /**
+   * Determine all of the members in a given group.
+   */
   public static int[] getGroupMembers(int groupid)
   {
     assert 0 <= groupid && groupid < NUM_GROUPS;
