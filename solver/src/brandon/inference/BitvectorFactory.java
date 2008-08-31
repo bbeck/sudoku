@@ -131,6 +131,10 @@ public class BitvectorFactory
     return bits;
   }
 
+  /**
+   * Precomputed bitvector class.  Doesn't do any computation of its own, it
+   * looks everything up in precomputed caches of results.
+   */
   private final class PrecomputedBitvector implements Bitvector
   {
     private final int encoded;
@@ -177,6 +181,95 @@ public class BitvectorFactory
       assert b instanceof PrecomputedBitvector;
       assert getWidth() == b.getWidth();
       return (PrecomputedBitvector) b;
+    }
+  }
+
+  public static void main(String... args)
+  {
+    BitvectorFactory factory = BitvectorFactory.getInstance(9);
+
+    assert factory.getNone().getBitCount() == 0;
+    assert factory.getAll().getBitCount() == 9;
+    
+    for(int i = 1; i <= 9; i++) {
+      Bitvector b = factory.encode(i);
+      assert b.getWidth() == 9;
+      assert b.getBitCount() == 1;
+      assert b.getBits()[0] == i;
+    }
+
+    for(int i = 1; i <= 9; i++) {
+      for(int j = i+1; j <= 9; j++) {
+        Bitvector b = factory.encode(new int[] { i, j });
+        int[] bits = b.getBits();
+
+        assert b.getWidth() == 9;
+        assert b.getBitCount() == 2;
+        assert bits.length == 2;
+        assert bits[0] == i || bits[1] == i;
+        assert bits[0] == j || bits[1] == j;
+        assert bits[0] != bits[1];
+      }
+    }
+
+    Bitvector none = factory.getNone();
+    Bitvector all = factory.getAll();
+    Bitvector one = factory.encode(1);
+
+    assert none.intersect(none) == none;
+    assert none.intersect(all) == none;
+    assert none.intersect(one) == none;
+    assert all.intersect(none) == none;
+    assert all.intersect(all) == all;
+    assert all.intersect(one) == one;
+    assert one.intersect(none) == none;
+    assert one.intersect(all) == one;
+    assert one.intersect(one) == one;
+
+    assert none.union(none) == none;
+    assert none.union(all) == all;
+    assert none.union(one) == one;
+    assert all.union(none) == all;
+    assert all.union(all) == all;
+    assert all.union(one) == all;
+    assert one.union(none) == one;
+    assert one.union(all) == all;
+    assert one.union(one) == one;
+
+    assert none.subtract(none) == none;
+    assert none.subtract(all) == none;
+    assert none.subtract(one) == none;
+    assert all.subtract(none) == all;
+    assert all.subtract(all) == none;
+    assert all.subtract(one) == factory.encode(new int[] { 2, 3, 4, 5, 6, 7, 8, 9 });
+    assert one.subtract(none) == one;
+    assert one.subtract(all) == none;
+    assert one.subtract(one) == none;
+
+
+    Bitvector a = BitvectorFactory.getInstance(9).encode(1);
+    Bitvector b = BitvectorFactory.getInstance(10).encode(1);
+    assert a != b;
+
+    try {
+      a.intersect(b);
+      assert false;
+    } catch(AssertionError e) {
+      // expected
+    }
+
+    try {
+      a.union(b);
+      assert false;
+    } catch(AssertionError e) {
+      // expected
+    }
+
+    try {
+      a.union(b);
+      assert false;
+    } catch(AssertionError e) {
+      // expected
     }
   }
 }

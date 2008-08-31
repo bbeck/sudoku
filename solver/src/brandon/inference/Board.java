@@ -90,8 +90,9 @@ public final class Board
     assert 0 <= id && id < NUM_CELLS : id;
     assert 1 <= value && value <= N : value;
 
-    // Check to see if setting the specified value would cause a contradiction
     Bitvector valueMask = factory.encode(value);
+
+    // Check to see if setting the specified value would cause a contradiction
     if(possibilities[id].intersect(valueMask) == factory.getNone()) {
       return false;
     }
@@ -182,7 +183,7 @@ public final class Board
 
         possibilityString[j] = "";
 
-        for(int k = 0; k < N; k++) {
+        for(int k = 1; k <= N; k++) {
           if(Arrays.binarySearch(possibleValues, k) >= 0) {
             possibilityString[j] += Integer.toString(k);
           } else {
