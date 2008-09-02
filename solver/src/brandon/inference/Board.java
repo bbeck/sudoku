@@ -74,6 +74,11 @@ public final class Board
    */
   private final Bitvector[] possibilities;
 
+  /**
+   * Version of the board.  Incremented each time the board is mutated.
+   */
+  private int version;
+
   private Board(boolean fill)
   {
     factory = BitvectorFactory.getInstance(N);
@@ -81,7 +86,7 @@ public final class Board
 
     if(fill) {
       Arrays.fill(possibilities, factory.getAll());
-      
+      version = 0;
     }
   }
 
@@ -127,6 +132,7 @@ public final class Board
       }
     }
 
+    version++;
     return true;
   }
 
@@ -145,6 +151,7 @@ public final class Board
       }
     }
 
+    version++;
     return true;
   }
 
@@ -167,6 +174,11 @@ public final class Board
   public final int[] getPossibleValues(int id)
   {
     return possibilities[id].getBits();
+  }
+
+  public final int getVersion()
+  {
+    return version;
   }
 
   public final String toString()
@@ -237,6 +249,7 @@ public final class Board
   public static Board fromBoard(Board other)
   {
     Board board = new Board(false);
+    board.version = other.version;    
     System.arraycopy(other.possibilities, 0, board.possibilities, 0, NUM_CELLS);
 
     return board;

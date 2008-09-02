@@ -65,12 +65,28 @@ public final class Solver implements sudoku.Solver
     return null;
   }
 
+  private final Board infer(Board board)
+  {
+    boolean simplified;
+
+    do {
+      int version = board.getVersion();
+      Board other = inferHiddenSingles(board);
+      if(other == null) {
+        return null;
+      }
+
+      simplified = other.getVersion() != version;
+    } while(simplified);
+
+    return search(board);
+  }
+
   // Keep a record of which cells have which possible values (only keep one around)
   final int infer_length = 10;
   final int[] infer_possibilities = new int[infer_length];
   final int[] infer_counts = new int[infer_length*Board.NUM_GROUPS];
-
-  private final Board infer(Board board)
+  private final Board inferHiddenSingles(Board board)
   {
     Arrays.fill(infer_counts, 0);
 
@@ -80,14 +96,17 @@ public final class Solver implements sudoku.Solver
       for(int id : members) {
         int[] values = board.getPossibleValues(id);
 
-        for(int value: values) {
-          infer_possibilities[value] = id;
-          infer_counts[groupid*infer_length + value]++;
+        // Only deal with this cell if its value hasn't already been fixed
+        if(values.length > 1) {
+          for(int value : values) {
+            infer_possibilities[value] = id;
+            infer_counts[groupid * infer_length + value]++;
+          }
         }
       }
 
       for(int value = 1; value < infer_length; value++) {
-        if(infer_counts[groupid*infer_length + value] == 1) {
+        if(infer_counts[groupid * infer_length + value] == 1) {
           if(!board.setValue(infer_possibilities[value], value)) {
             return null;
           }
@@ -95,6 +114,6 @@ public final class Solver implements sudoku.Solver
       }
     }
 
-    return search(board);
+    return board;
   }
 }
