@@ -2,68 +2,12 @@ package brandon.inference;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
 
+/**
+ * Representation of a sudoku board.
+ */
 public final class Board
 {
-  public static final int N = 9;
-  public static final int NUM_CELLS = N * N;
-  public static final int NUM_GROUPS = N * 3;
-  
-  /**
-   * Mapping of the groups a given cell is in.
-   */
-  private static final int[][] GROUPS = new int[NUM_CELLS][3];
-  static {
-    for(int id = 0; id < NUM_CELLS; id++) {
-      GROUPS[id][0] = id % 9;
-      GROUPS[id][1] = 9 + id / 9;
-      GROUPS[id][2] = 18 + 3 * (id / 27) + (id / 3) % 3;
-    }
-  }
-
-  /**
-   * Mapping of all of the neighbors of a given cell.
-   */
-  private static final int[][] NEIGHBORS = new int[NUM_CELLS][20];
-  static {
-    for(int id = 0; id < NUM_CELLS; id++) {
-      Set<Integer> neighbors = new HashSet<Integer>();
-      for(int i = 0; i < GROUPS[id].length; i++) {
-        int group = GROUPS[id][i];
-
-        for(int j = 0; j < NUM_CELLS; j++) {
-          for(int k = 0; k < GROUPS[j].length; k++) {
-            if(GROUPS[j][k] == group) {
-              neighbors.add(j);
-            }
-          }
-        }
-      }
-      neighbors.remove(id);
-
-      Iterator<Integer> iter = neighbors.iterator();
-      for(int i = 0; i < 20; i++) {
-        NEIGHBORS[id][i] = iter.next();
-      }
-    }
-  }
-
-  /**
-   * Mapping of which cells are in a given group.
-   */
-  private static final int[][] GROUP_CELLS = new int[NUM_GROUPS][N];
-  static {
-    int[] indices = new int[NUM_GROUPS];
-    for(int id = 0; id < NUM_CELLS; id++) {
-      for(int groupid : GROUPS[id]) {
-        GROUP_CELLS[groupid][indices[groupid]++] = id;
-      }
-    }
-  }
-
   /**
    * Factory for creating bitvectors.
    */
@@ -81,8 +25,8 @@ public final class Board
 
   private Board(boolean fill)
   {
-    factory = BitvectorFactory.getInstance(N);
-    possibilities = new Bitvector[NUM_CELLS];
+    factory = BitvectorFactory.getInstance(Cells.N);
+    possibilities = new Bitvector[Cells.NUM_CELLS];
 
     if(fill) {
       Arrays.fill(possibilities, factory.getAll());
@@ -92,8 +36,8 @@ public final class Board
 
   public final boolean setValue(int id, int value)
   {
-    assert 0 <= id && id < NUM_CELLS : id;
-    assert 1 <= value && value <= N : value;
+    assert 0 <= id && id < Cells.NUM_CELLS : id;
+    assert 1 <= value && value <= Cells.N : value;
 
     Bitvector valueMask = factory.encode(value);
 
@@ -107,7 +51,7 @@ public final class Board
 
     // Go to each neighboring cell and update their possibility lists,
     // detecting any contradictions
-    int[] neighbors = getNeighbors(id);
+    int[] neighbors = Cells.getNeighbors(id);
     for(int i = 0; i < neighbors.length; i++) {
       int neighborId = neighbors[i];
       Bitvector oldPossibilityMask = possibilities[neighborId];
@@ -139,12 +83,13 @@ public final class Board
   public final boolean removePossibilities(int id, int[] values)
   {
     Bitvector possibilityMask = possibilities[id].subtract(factory.encode(values));
-    possibilities[id] = possibilityMask;
 
     if(possibilityMask == factory.getNone()) {
       return false;
     }
 
+    possibilities[id] = possibilityMask;
+    
     if(possibilityMask.getBitCount() == 1) {
       if(!setValue(id, possibilityMask.getBits()[0])) {
         return false;
@@ -160,11 +105,15 @@ public final class Board
     int bestCount = Integer.MAX_VALUE;
     int bestId = -1;
 
-    for(int id = 0; id < NUM_CELLS; id++) {
+    for(int id = 0; id < Cells.NUM_CELLS; id++) {
       int count = possibilities[id].getBitCount();
       if(1 < count && count < bestCount) {
         bestCount = count;
         bestId = id;
+
+        if(bestCount == 2) {
+          break;
+        }
       }
     }
 
@@ -186,16 +135,16 @@ public final class Board
     String rowFormat = " {0} {1} {2} | {3} {4} {5} | {6} {7} {8} ";
     String spacer = "-------------------------------+-------------------------------+-------------------------------";
 
-    String[] formats = new String[N];
-    for(int i = 0; i < N; i++) {
-      String[] possibilityString = new String[N];
+    String[] formats = new String[Cells.N];
+    for(int i = 0; i < Cells.N; i++) {
+      String[] possibilityString = new String[Cells.N];
 
-      for(int j = 0; j < N; j++) {
-        int[] possibleValues = possibilities[i*N+j].getBits();
+      for(int j = 0; j < Cells.N; j++) {
+        int[] possibleValues = possibilities[i* Cells.N +j].getBits();
 
         possibilityString[j] = "";
 
-        for(int k = 1; k <= N; k++) {
+        for(int k = 1; k <= Cells.N; k++) {
           if(Arrays.binarySearch(possibleValues, k) >= 0) {
             possibilityString[j] += Integer.toString(k);
           } else {
@@ -227,15 +176,15 @@ public final class Board
   public static Board fromArray(int[][] array)
   {
     Board board = new Board(true);
-    assert array.length == N;
+    assert array.length == Cells.N;
 
-    for(int i = 0; i < N; i++) {
-      assert array[i].length == N;
+    for(int i = 0; i < Cells.N; i++) {
+      assert array[i].length == Cells.N;
 
-      for(int j = 0; j < N; j++) {
+      for(int j = 0; j < Cells.N; j++) {
         int value = array[i][j];
         if(value != sudoku.Solver.MISSING) {
-          board.setValue(i * N + j, value);
+          board.setValue(i * Cells.N + j, value);
         }
       }
     }
@@ -250,8 +199,9 @@ public final class Board
   {
     Board board = new Board(false);
     board.version = other.version;    
-    System.arraycopy(other.possibilities, 0, board.possibilities, 0, NUM_CELLS);
-
+    System.arraycopy(other.possibilities, 0, board.possibilities, 0, Cells.NUM_CELLS);
+    // TODO(bbeck): Copy other.index into board.index.
+    
     return board;
   }
 
@@ -260,31 +210,13 @@ public final class Board
    */
   public static void toArray(Board board, int[][] array)
   {
-    assert array.length == N;
+    assert array.length == Cells.N;
 
-    for(int id = 0; id < NUM_CELLS; id++) {
-      assert array[id].length == N;
+    for(int id = 0; id < Cells.NUM_CELLS; id++) {
+      assert array[id].length == Cells.N;
 
       int value = board.possibilities[id].getBits()[0];
-      array[id/N][id%N] = value;
+      array[id/ Cells.N][id% Cells.N] = value;
     }
-  }
-
-  /**
-   * Determine all of the neighbors of a given cell.
-   */
-  public static int[] getNeighbors(int id)
-  {
-    assert 0 <= id && id < NUM_CELLS;
-    return NEIGHBORS[id];
-  }
-
-  /**
-   * Determine all of the members in a given group.
-   */
-  public static int[] getGroupMembers(int groupid)
-  {
-    assert 0 <= groupid && groupid < NUM_GROUPS;
-    return GROUP_CELLS[groupid];
   }
 }
