@@ -25,7 +25,16 @@
     <delete dir="${out.dir}"/>
   </target>
 
-  <target name="all" depends="init, clean, driver.compile, solver.compile">
+  <target name="options" depends="debug.default, profile.default, tuned.default">
+    <echo message="debug.compilerargs: ${debug.compilerargs}"/>
+    <echo message="profile.compilerargs: ${profile.compilerargs}"/>
+    <echo message="tuned.compilerargs: ${tuned.compilerargs}"/>
+  </target>
+
+  <target name="compile" depends="options, driver.compile, solver.compile">
+  </target>
+
+  <target name="all" depends="init, clean, compile">
   </target>
 
   <!-- ==================================================================== -->
@@ -33,29 +42,38 @@
   <!-- ==================================================================== -->
   <target name="debug">
     <property name="debug.specified" value="true"/>
+    <property name="debug.compilerargs" value="-g"/>
     <property name="debug.jvmargs" value="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"/>
   </target>
   <target name="debug.default" unless="debug.specified">
+    <property name="debug.specified" value="false"/>
+    <property name="debug.compilerargs" value=""/>
     <property name="debug.jvmargs" value=""/>
   </target>
 
   <target name="profile">
     <property name="profile.specified" value="true"/>
+    <property name="profile.compilerargs" value="-g"/>
     <property name="profile.jvmargs" value="-agentlib:hprof=cpu=samples,format=a,depth=2,lineno=y"/>
   </target>
   <target name="profile.default" unless="profile.specified">
+    <property name="profile.specified" value="false"/>
+    <property name="profile.compilerargs" value=""/>
     <property name="profile.jvmargs" value=""/>
   </target>
 
   <target name="tuned">
-    <property name="tuned.spedified" value="true"/>
+    <property name="tuned.specified" value="true"/>
+    <property name="tuned.compilerargs" value="-g:none"/>
     <property name="tuned.jvmargs" value="-server -Xverify:none -da -dsa"/>
   </target>
   <target name="tuned.default" unless="tuned.specified">
+    <property name="tuned.specified" value="false"/>
+    <property name="tuned.compilerargs" value=""/>
     <property name="tuned.jvmargs" value=""/>
   </target>
 
-  <target name="solver.run" depends="driver.compile, solver.compile, debug.default, profile.default, tuned.default">
+  <target name="solver.run" depends="debug.default, profile.default, tuned.default, driver.compile, solver.compile">
     <fail message="Please specify a solver to run using -Dsolver.name=[your solver name]" unless="solver.name"/>
 
     <java classname="sudoku.Driver" fork="yes">

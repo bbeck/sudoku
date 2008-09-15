@@ -29,6 +29,9 @@
     <mkdir dir="${driver.output.dir}"/>
     
     <javac destdir="${driver.output.dir}" debug="on">
+      <compilerarg line="${debug.compilerargs}"/>
+      <compilerarg line="${profile.compilerargs}"/>
+      <compilerarg line="${tuned.compilerargs}"/>
       <classpath refid="driver.compile.classpath"/>
       <src location="${driver.src.dir}"/>
     </javac>

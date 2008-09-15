@@ -29,7 +29,10 @@
   <target name="solver.compile">
     <mkdir dir="${solver.output.dir}"/>
 
-    <javac destdir="${solver.output.dir}">
+    <javac destdir="${solver.output.dir}" debug="on">
+      <compilerarg line="${debug.compilerargs}"/>
+      <compilerarg line="${profile.compilerargs}"/>
+      <compilerarg line="${tuned.compilerargs}"/>      
       <classpath refid="solver.compile.classpath"/>
       <src location="${solver.src.dir}"/>
     </javac>

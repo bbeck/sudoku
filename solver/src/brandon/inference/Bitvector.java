@@ -36,4 +36,9 @@ public interface Bitvector
    * bitvector.
    */
   Bitvector subtract(Bitvector that);
+
+  /**
+   * {@inheritDoc}
+   */
+  String toString();
 }

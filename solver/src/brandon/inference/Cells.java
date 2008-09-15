@@ -1,8 +1,7 @@
 package brandon.inference;
 
-import java.util.Set;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Helper class to keep track of cell and group relationships.
@@ -39,7 +38,7 @@ public final class Cells
   /**
    * Mapping of all of the neighbors of a given cell.
    */
-  private static final int[][] NEIGHBORS = new int[NUM_CELLS][20];
+  private static final Bitvector[] NEIGHBORS = new Bitvector[NUM_CELLS];
   static {
     for(int id = 0; id < NUM_CELLS; id++) {
       Set<Integer> neighbors = new HashSet<Integer>();
@@ -56,10 +55,14 @@ public final class Cells
       }
       neighbors.remove(id);
 
-      Iterator<Integer> iter = neighbors.iterator();
-      for(int i = 0; i < 20; i++) {
-        NEIGHBORS[id][i] = iter.next();
+      int[] bits = new int[neighbors.size()];
+      int count = 0;
+      for(Integer bit : neighbors) {
+        bits[count++] = bit;
       }
+
+      BitvectorFactory factory = Bitvectors.getFactory(NUM_CELLS);
+      NEIGHBORS[id] = factory.encode(bits);
     }
   }
 
@@ -79,7 +82,7 @@ public final class Cells
   /**
    * Determine all of the neighbors of a given cell.
    */
-  public static int[] getNeighbors(int id)
+  public static Bitvector getNeighbors(int id)
   {
     assert 0 <= id && id < NUM_CELLS;
     return NEIGHBORS[id];
@@ -97,6 +100,7 @@ public final class Cells
   /**
    * Singleton.
    */
-  private Cells() {
+  private Cells()
+  {
   }
 }

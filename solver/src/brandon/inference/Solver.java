@@ -85,7 +85,7 @@ public final class Solver implements sudoku.Solver
   // Within a group keep a record of which cells have which possible values (only keep one around)
   final int infer_length = 10;
   final int[] infer_possibilities = new int[infer_length];
-  final int[] infer_counts = new int[infer_length* Cells.NUM_GROUPS];
+  final int[] infer_counts = new int[infer_length * Cells.NUM_GROUPS];
 
   /**
    * Find all hidden singles (cells that are the only possible place in a group for a given value).

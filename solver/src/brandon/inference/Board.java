@@ -9,7 +9,7 @@ import java.util.Arrays;
 public final class Board
 {
   /**
-   * Factory for creating bitvectors.
+   * Factory for creating value (0-Cells.N) bitvectors.
    */
   private final BitvectorFactory factory;
 
@@ -25,11 +25,13 @@ public final class Board
 
   private Board(boolean fill)
   {
-    factory = BitvectorFactory.getInstance(Cells.N);
+    factory = Bitvectors.getFactory(Cells.N+1);
     possibilities = new Bitvector[Cells.NUM_CELLS];
 
     if(fill) {
-      Arrays.fill(possibilities, factory.getAll());
+      Bitvector allValues = factory.getAll().subtract(factory.encode(0));
+      
+      Arrays.fill(possibilities, allValues);
       version = 0;
     }
   }
@@ -51,9 +53,8 @@ public final class Board
 
     // Go to each neighboring cell and update their possibility lists,
     // detecting any contradictions
-    int[] neighbors = Cells.getNeighbors(id);
-    for(int i = 0; i < neighbors.length; i++) {
-      int neighborId = neighbors[i];
+    Bitvector neighbors = Cells.getNeighbors(id);
+    for(int neighborId : neighbors.getBits()) {
       Bitvector oldPossibilityMask = possibilities[neighborId];
       Bitvector possibilityMask = oldPossibilityMask.subtract(valueMask);
 
@@ -80,6 +81,7 @@ public final class Board
     return true;
   }
 
+/*
   public final boolean removePossibilities(int id, int[] values)
   {
     Bitvector possibilityMask = possibilities[id].subtract(factory.encode(values));
@@ -99,6 +101,7 @@ public final class Board
     version++;
     return true;
   }
+*/
 
   public final int getCellToSearch()
   {
@@ -140,7 +143,7 @@ public final class Board
       String[] possibilityString = new String[Cells.N];
 
       for(int j = 0; j < Cells.N; j++) {
-        int[] possibleValues = possibilities[i* Cells.N +j].getBits();
+        int[] possibleValues = possibilities[i * Cells.N + j].getBits();
 
         possibilityString[j] = "";
 
@@ -200,8 +203,6 @@ public final class Board
     Board board = new Board(false);
     board.version = other.version;    
     System.arraycopy(other.possibilities, 0, board.possibilities, 0, Cells.NUM_CELLS);
-    // TODO(bbeck): Copy other.index into board.index.
-    
     return board;
   }
 
