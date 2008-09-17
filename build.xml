@@ -78,7 +78,7 @@
 
     <java classname="sudoku.Driver" fork="yes">
       <classpath refid="solver.runtime.classpath"/>
-      <jvmarg line="-Xmx512m"/>
+      <jvmarg line="-Xmx512m -Xms512m"/>
       <jvmarg line="${debug.jvmargs}"/>
       <jvmarg line="${profile.jvmargs}"/>
       <jvmarg line="${tuned.jvmargs}"/>

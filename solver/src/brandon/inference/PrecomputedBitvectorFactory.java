@@ -1,6 +1,5 @@
 package brandon.inference;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -141,6 +140,11 @@ public final class PrecomputedBitvectorFactory implements BitvectorFactory
       return bits;
     }
 
+    public int getBit(int i)
+    {
+      return bits[i];
+    }
+
     public int getBitCount()
     {
       return bits.length;
@@ -194,22 +198,25 @@ public final class PrecomputedBitvectorFactory implements BitvectorFactory
     Bitvector all = factory.getAll();
     assert all.getWidth() == 5;
     assert all.getBitCount() == 5;
-    assert Arrays.equals(all.getBits(), new int[] { 0, 1, 2, 3, 4 });
+    assert all.getBit(0) == 0;
+    assert all.getBit(1) == 1;
+    assert all.getBit(2) == 2;
+    assert all.getBit(3) == 3;
+    assert all.getBit(4) == 4;
 
     Bitvector none = factory.getNone();
     assert none.getWidth() == 5;
     assert none.getBitCount() == 0;
-    assert Arrays.equals(none.getBits(), new int[] {});
-
+    
     Bitvector zero = factory.encode(0);
     assert zero.getWidth() == 5;
     assert zero.getBitCount() == 1;
-    assert Arrays.equals(zero.getBits(), new int[] { 0 });
+    assert zero.getBit(0) == 0;
 
     Bitvector one = factory.encode(1);
     assert one.getWidth() == 5;
     assert one.getBitCount() == 1;
-    assert Arrays.equals(one.getBits(), new int[] { 1 });
+    assert one.getBit(0) == 1;
 
     // Intersection
     assert all.intersect(all) == all;

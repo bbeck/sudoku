@@ -8,9 +8,14 @@ public interface Bitvector
   int getWidth();
 
   /**
-   * Which bits are set in the bitvector (1-based).
+   * Which bits are set in the bitvector.
    */
   int[] getBits();
+
+  /**
+   * Determine the ith bit that is set.
+   */
+  int getBit(int i);
 
   /**
    * How many bits are set in the bitvector.

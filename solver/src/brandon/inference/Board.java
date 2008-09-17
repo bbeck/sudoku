@@ -71,7 +71,7 @@ public final class Board
       possibilities[neighborId] = possibilityMask;
 
       if(possibilityMask.getBitCount() == 1) {
-        if(!setValue(neighborId, possibilityMask.getBits()[0])) {
+        if(!setValue(neighborId, possibilityMask.getBit(0))) {
           return false;
         }
       }
@@ -143,7 +143,7 @@ public final class Board
       String[] possibilityString = new String[Cells.N];
 
       for(int j = 0; j < Cells.N; j++) {
-        int[] possibleValues = possibilities[i * Cells.N + j].getBits();
+        int[] possibleValues = getPossibleValues(i * Cells.N + j);
 
         possibilityString[j] = "";
 
@@ -215,8 +215,9 @@ public final class Board
 
     for(int id = 0; id < Cells.NUM_CELLS; id++) {
       assert array[id].length == Cells.N;
+      assert board.possibilities[id].getBitCount() == 1;
 
-      int value = board.possibilities[id].getBits()[0];
+      int value = board.possibilities[id].getBit(0);
       array[id/ Cells.N][id% Cells.N] = value;
     }
   }

@@ -11,8 +11,7 @@ public final class Bitvectors
   {
     BitvectorFactory factory = FACTORIES[numBits];
     if(factory == null) {
-      factory = newFactory(numBits);
-      FACTORIES[numBits] = factory;
+      FACTORIES[numBits] = factory = newFactory(numBits);
     }
 
     return factory;
@@ -25,7 +24,7 @@ public final class Bitvectors
     }
 
     if(numBits == 81) {
-      return new Bitvector81Factory();
+      return new LongBitvectorFactory();
     }
 
     throw new IllegalArgumentException("invalid number of bits: " + numBits);
